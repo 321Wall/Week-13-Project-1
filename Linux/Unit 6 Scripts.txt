@@ -1,0 +1,477 @@
+Unit 6 Scripts
+sys_info.sh
+#!/bin/bash
+
+mkdir ~/research 2> /dev/null
+
+echo "A Quick System Audit Script" > ~/research/sys_info.txt
+date >> ~/research/sys_info.txt
+echo "" >> ~/research/sys_info.txt
+echo "Machine Type Info:" >> ~/research/sys_info.txt
+echo $MACHTYPE >> ~/research/sys_info.txt
+echo -e "Uname info: $(uname -a) \n" >> ~/research/sys_info.txt
+echo -e "IP Info: $(ip addr | grep inet | tail -2 | head -1) \n" >> ~/research/sys_info.txt
+echo -e "Hostname: $(hostname -s) \n" >> ~/research/sys_info.txt
+echo "DNS Servers: " >> ~/research/sys_info.txt
+cat /etc/resolv.conf >> ~/research/sys_info.txt
+echo -e "\nMemory Info:" >> ~/research/sys_info.txt
+free >> ~/research/sys_info.txt
+echo -e "\nCPU Info:" >> ~/research/sys_info.txt
+lscpu | grep CPU >> ~/research/sys_info.txt
+echo -e "\nDisk Usage:" >> ~/research/sys_info.txt
+df -H | head -2 >> ~/research/sys_info.txt
+echo -e "\nWho is logged in: \n $(who -a) \n" >> ~/research/sys_info.txt
+echo -e "\nSUID Files:" >> ~/research/sys_info.txt
+find / -type f -perm /4000 >> ~/research/sys_info.txt
+echo -e "\nTop 10 Processes" >> ~/research/sys_info.txt
+ps aux -m | awk {'print $1, $2, $3, $4, $11'} | head >> ~/research/sys_info.txt
+
+----------------------------------------------------
+
+#!/bin/bash
+
+mkdir ~/research 2> /dev/null
+
+echo "A Quick System Audit Script" >  ~/research/sys_info.txt
+date >> ~/research/sys_info.txt
+echo "" >> ~/research/sys_info.txt
+echo "Machine Type Info:" >> ~/research/sys_info.txt
+echo $MACHTYPE >> ~/research/sys_info.txt
+echo -e "Uname info: $(uname -a) \n" >> ~/research/sys_info.txt
+echo -e "IP Info: $(ip addr | grep inet | tail -2 | head -1) \n" >> ~/research/sys_info.txt
+echo "Hostname: $(hostname -s) " >> ~/research/sys_info.txt
+echo -e "\n777 Files:" >>  ~/research/sys_info.txt
+find / -type f -perm 777 >> ~/research/sys_info.txt
+echo -e "\nTop 10 Processes" >> ~/research/sys_info.txt
+ps aux -m | awk {'print $1, $2, $3, $4, $11'} | head >> ~/research/sys_info.txt
+
+-------------------------------------------------------------
+
+if_exit.sh
+#!/bin/bash
+# Basic if statement
+
+# if [ <condition> ]
+# then
+#   <run_this_command>
+#   <run_this_command>
+#   <run_this_command>
+# fi
+
+# if [ <condition> ]
+# then
+#   <run_this_command>
+# else
+#   <run_this_command>
+# fi
+
+# if [ <condition1> ] && [ <condition2> ]
+# then
+#   <run_this_command>
+# else  
+#   <run_this_command>
+# fi
+
+# if [ <condition1> ] || [ <condition2> ]
+# then
+#   <run_this_command>
+#   <run_this_command>
+#   <run_this_command>
+# fi
+
+# number variables
+x=5
+y=100
+
+# string variables
+str1='this is a string'
+str2='this is different string'
+
+# If $x is equal to $y, run the echo command.
+if [ $x = $y ]
+then 
+  echo "X is equal to Y!"
+fi
+
+# If x is not equal to y, exit the script
+if [ $x != $y ]
+then 
+  echo "X does not equal Y"
+fi
+
+# If str1 is not equal to str2, run the echo command and exit the script.
+if [ $str1 != $str2 ]
+then 
+  echo "These strings do not match."
+  echo "Exiting this script."
+  exit
+fi
+
+# If x is greater than y, run the echo command - only works for integer values
+if [ $x -gt $y ]
+then
+  echo "$x is greater than $y".
+fi
+
+# check if x is less than y - only works for integer values
+if [ $x -lt $y ]
+then 
+  echo "$x is less than $y!"
+else
+  echo "$x is not less than $y!"
+fi
+
+# check if $str1 is equal to 'this string' AND $x is greater than $y
+# only works if x and y are integers
+if [ $str1 = 'this string' ] && [ $x -gt $y ]
+then
+  echo "Those strings match and $x is greater than $y!"
+else
+  echo "Either those strings don't match, or $x is not greater than $y"
+fi
+
+# check if $str1 is equal to str2 OR $x is less than $y
+# only works if x and y are integers
+if [ $str1 != $str2 ] || [ $x -lt $y ]
+then
+  echo "Either those strings don't match OR $x is less than $y!"
+else
+  echo "Those strings match, AND $x is not less than $y"
+fi
+
+# check for the /etc directory
+if [ -d /etc ]
+then
+  echo "The /etc directory exists!"
+fi
+
+# check for my_cool_folder
+if [ ! -d /my_cool_folder ]
+then 
+  echo "my_cool_folder isn\'t there!"
+fi
+
+# check for my_file.txt
+if [ -f /my_file.txt ]
+then
+  echo "my_file.txt is there"
+fi
+
+# if sysadmin is running this script, then run an echo command
+if [ $USER != 'sysadmin' ]
+then 
+  echo "You are not the sysadmin!"
+  exit
+fi
+
+# if the uid of the user running this script does not equal 1000, run the echo command
+if [ $UID -ne 1000 ]
+then
+  echo "Your UID is wrong"
+  exit
+fi
+
+# if sysadmin is running this script, run the echo command
+if [ $(whoami) = 'sysadmin' ]
+then
+  echo "You are sysadmin!"
+fi
+------------------------------------
+
+sys_info.sh
+#!/bin/bash
+
+#Check if script was run as root. Exit if true.
+if [ $UID -eq 0 ]; then
+  echo "Please do not run this script as root."
+  exit
+fi
+
+# Define Variables
+output=$HOME/research/sys_info.txt
+ip=$(ip addr | grep inet | tail -2 | head -1)
+execs=$(sudo find /home -type f -perm 777 2>/dev/null)
+
+# Check for research directory. Create it if needed.
+if [ ! -d $HOME/research ]; then
+  mkdir $HOME/research
+fi
+
+# Check for output file. Clear it if needed.
+if [ -f $output ]; then
+  rm $output
+fi
+
+echo "A Quick System Audit Script" >>$output
+date >>$output
+echo "" >>$output
+echo "Machine Type Info:" >>$output
+echo -e "$MACHTYPE \n" >>$output
+echo -e "Uname info: $(uname -a) \n" >>$output
+echo -e "IP Info:" >>$output
+echo -e "$ip \n" >>$output
+echo -e "Hostname: $(hostname -s) \n" >>$output
+echo "DNS Servers: " >>$output
+cat /etc/resolv.conf >>$output
+echo -e "\nMemory Info:" >>$output
+free >>$output
+echo -e "\nCPU Info:" >>$output
+lscpu | grep CPU >>$output
+echo -e "\nDisk Usage:" >>$output
+df -H | head -2 >>$output
+echo -e "\nWho is logged in: \n $(who -a) \n" >>$output
+echo -e "\nexec Files:" >>$output
+echo $execs >>$output
+echo -e "\nTop 10 Processes" >>$output
+ps aux --sort -%mem | awk {'print $1, $2, $3, $4, $11'} | head >>$output
+----------------------------------------------------------
+
+ins_for_loops.sh
+#!/bin/bash
+
+# for <item> in <list>
+# do
+#   <run_this_command>
+#   <run_this_command>
+# done
+
+
+# list variables
+months=(
+    'january'
+    'february'
+    'march'
+    'april'
+    'may'
+    'june'
+    'july'
+    'august'
+    'september'
+    'october'
+    'november'
+    'december'
+)
+days=('mon' 'tues' 'wed' 'thur' 'fri' 'sat' 'sun')
+
+# create for loops
+
+#print out months
+for month in ${months[@]}
+do 
+    echo $month
+done
+
+#print out the days of the week
+for day in ${days[@]}
+do
+    if [ $day = 'sun' ] || [ $day = 'sat' ]
+    then 
+        echo "It is the weekend! Take it easy."
+    else
+        echo "It is a weekday! Get to work!"
+    fi 
+done
+
+# run a command on each file
+for file in $(ls)
+do
+    ls -lah $file
+done
+
+# dislay the number if it's a 1 or 4
+for num in {0..5}
+do 
+    if [ $num = 1 ] || [ $num = 4 ]
+    echo $num 
+done
+
+----------------------------------------------
+
+for_loops.sh
+#!/bin/bash
+
+# Create Variables
+nums=$(echo {0..9})
+states=('Nebraska' 'California' 'Texas' 'Hawaii' 'Washington')
+ls_out=$(ls)
+
+execs=$(find /home -type f -perm 777 2>/dev/null)
+
+# Create For Loops
+# Create a loop that prints only 3, 5 and 7
+for num in ${nums[@]}; do
+  if [ $num = 3 ] || [ $num = 5 ] || [ $num = 7 ]; then
+    echo $num
+  fi
+done
+
+# Create a loop that looks for 'Hawaii'
+for state in ${states[@]}; do
+  if [ $state == 'Hawaii' ]; then
+    echo "Hawaii is the best!"
+  else
+    echo "I'm not a fan of Hawaii."
+  fi
+done
+
+# Create a `for` loop that prints out each item in your variable that holds the output of the `ls` command.
+for x in ${ls_out[@]}; do
+  echo $x
+done
+
+# Bonus
+# Create a for loop to print out execs on one line for each entry
+for exec in ${execs[@]}; do
+  echo $exec
+
+done
+
+---------------------------------------
+
+useful_loops.sh
+#!/bin/bash
+
+# Define packages list
+packages=(
+    'nano'
+    'wget'
+    'net-tools'
+)
+
+# loop though the list of packages and show if they are installed
+for package in ${packages[@]};
+do
+    if [ $(which $package) ]
+    then 
+        echo "$package is installed at $(which $package)."
+    else
+        echo "$package is not installed."
+    fi
+done
+
+
+# Search each user's home directory for scripts and provide a formatted output.
+for user in $(ls /home);
+do   
+    for item in $(find /home/$user -iname '*.sh');
+    do 
+        echo -e "Found a script in $user's home folder! \n$item"
+    done
+done
+
+
+# loop through scripts in the scripts folder and change the permissions to execute 
+for script in $(ls ~/scripts);
+do 
+    if [ ! -x ~/scripts/$script ]
+    then
+        chmod +x ~/scripts/$script
+    fi
+done
+
+
+# loop through a group of files and create a hash of each file.
+# we assume files_for_hashing/ exists and contains at least one file
+for file in $(ls ~/Documents/files_for_hashing/);
+do
+    sha256sum $file
+done
+
+------------------------------------------------------------
+
+sys_info_2.sh
+#!/bin/bash
+
+#Check if script was run as root. Exit if false.
+if [ $UID -ne 0 ]; then
+  echo "Please run this script as root."
+  exit
+fi
+
+# Define Variables
+output=$HOME/research/sys_info.txt
+ip=$(ip addr | grep inet | tail -2 | head -1)
+execs=$(sudo find /home -type f -perm 777 2>/dev/null)
+cpu=$(lscpu | grep CPU)
+disk=$(df -H | head -2)
+
+# Define Lists to use later
+commands=(
+  'date'
+  'uname -a'
+  'hostname -s'
+)
+
+files=(
+  '/etc/passwd'
+  '/etc/shadow'
+)
+
+#Check for research directory. Create it if needed.
+if [ ! -d $HOME/research ]; then
+  mkdir $HOME/research
+fi
+
+# Check for output file. Clear it if needed.
+if [ -f $output ]; then
+  >$output
+fi
+
+##################################################
+#Start Script
+
+echo "A Quick System Audit Script" >>$output
+echo "" >>$output
+
+for x in {0..2}; do
+  results=$(${commands[$x]})
+  echo "Results of "${commands[$x]}" command:" >>$output
+  echo $results >>$output
+  echo "" >>$output
+done
+
+# Display Machine type
+echo "Machine Type Info:" >>$output
+echo -e "$MACHTYPE \n" >>$output
+
+# Display IP Address info
+echo -e "IP Info:" >>$output
+echo -e "$ip \n" >>$output
+
+# Display Memory usage
+echo -e "\nMemory Info:" >>$output
+free >>$output
+
+#Display CPU usage
+echo -e "\nCPU Info:" >>$output
+lscpu | grep CPU >>$output
+
+# Display Disk usage
+echo -e "\nDisk Usage:" >>$output
+df -H | head -2 >>$output
+
+#Display who is logged in
+echo -e "\nCurrent user login information: \n $(who -a) \n" >>$output
+
+# Display DNS Info
+echo "DNS Servers: " >>$output
+cat /etc/resolv.conf >>$output
+
+# List exec files
+echo -e "\nexec Files:" >>$output
+for exec in $execs; do
+  echo $exec >>$output
+done
+
+# List top 10 processes
+echo -e "\nTop 10 Processes" >>$output
+ps aux --sort -%mem | awk {'print $1, $2, $3, $4, $11'} | head >>$output
+
+# Check the permissions on files
+echo -e "\nThe permissions for sensitive /etc files: \n" >>$output
+for file in ${files[@]}; do
+  ls -l $file >>$output
+done
+
+-------------------------------------------------
+

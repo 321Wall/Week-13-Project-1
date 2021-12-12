@@ -1,0 +1,75 @@
+Unit 13 Ansible Scripts
+-------------------------
+install-elk.yml
+---
+ - name: Instal Packages
+   hosts: elk
+   become: true
+   tasks:
+   - name: set maximum map count in sysctl/systemd
+     sysctl:
+       name: vm.max_map_count
+       value: 262144
+       state: present
+       reload: yes
+   - name: docker.io
+     apt:
+       force_apt_get: yes
+       update_cache: yes
+       name: docker.io
+       state: present
+   - name: instal pip3
+     apt:
+       force_apt_get: yes
+       name: python3-pip
+       state: present
+   - name: Install Docker module
+     pip:
+      name: docker
+      state: present
+   - name: download and launch elk
+     docker_container:
+       name: elk
+       image: sebp/elk:761
+       state: started
+       restart_policy: always
+       published_ports:
+         - 5601:5601
+         - 9200:9200
+         - 5044:5044
+white_check_mark
+eyes
+raised_hands
+React
+Reply
+
+---------------------------------
+
+filebeat-playbook.yml
+---
+- name: installing and launching filebeat
+  hosts: webservers
+  become: yes
+  tasks:
+
+  - name: download filebeat deb
+    command: curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat-7.4.0-amd64.deb
+
+  - name: install filebeat deb
+    command: dpkg -i filebeat-7.4.0-amd64.deb
+
+  - name: drop in filebeat.yml
+    copy:
+      src: /etc/ansible/files/filebeat-config.yml
+      dest: /etc/filebeat/filebeat.yml
+
+  - name: enable and configure system module
+    command: filebeat modules enable system
+
+  - name: setup filebeat
+    command: filebeat setup
+
+  - name: start filebeat service
+    command: service filebeat start
+
+-------------------------------------
